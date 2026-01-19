@@ -1,0 +1,8 @@
+{
+  "name": "WMS-Pro: Multi-Tenant Workflow Engine",
+  "description": "A sophisticated multi-tenant workflow management system for orchestrating operational processes across assets, vendors, and projects with AI-assisted workflow design.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

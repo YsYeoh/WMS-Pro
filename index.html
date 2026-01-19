@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS-Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React Flow Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .react-flow__node {
+          border-radius: 12px;
+          padding: 0;
+          border: none;
+          background: transparent;
+        }
+        .react-flow__handle {
+          width: 8px;
+          height: 8px;
+          background: #3b82f6;
+          border: 2px solid white;
+        }
+        .react-flow__edge-path {
+          stroke: #94a3b8;
+          stroke-width: 2;
+          transition: stroke 0.2s, stroke-width 0.2s;
+        }
+        .react-flow__edge.selected .react-flow__edge-path {
+          stroke: #2563eb !important;
+          stroke-width: 3 !important;
+        }
+        .react-flow__edge.selected .react-flow__edge-textbg {
+          fill: #eff6ff !important;
+        }
+        .react-flow__edge-text {
+          font-size: 10px;
+          font-weight: 600;
+          fill: #475569;
+        }
+        .react-flow__controls {
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: white;
+        }
+        .react-flow__attribution {
+          display: none;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "reactflow": "https://esm.sh/reactflow@11.11.4"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+</body>
+</html>
