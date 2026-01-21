@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   MessageSquare, 
@@ -17,10 +17,12 @@ import {
   X,
   ShoppingCart,
   CheckCircle,
-  // Added missing Workflow icon import
-  Workflow
+  Workflow,
+  ExternalLink,
+  Cpu,
+  MapPin
 } from 'lucide-react';
-import { MOCK_INSTANCES, MOCK_WORKFLOWS, MOCK_INVENTORY, MOCK_INVENTORY_REQUESTS } from '../constants';
+import { MOCK_INSTANCES, MOCK_WORKFLOWS, MOCK_INVENTORY, MOCK_INVENTORY_REQUESTS, MOCK_ASSETS, MOCK_LOCATIONS } from '../constants';
 import { InstanceStatus, InventoryItem, InventoryUsageRequest } from '../types';
 
 const InstanceDetails: React.FC = () => {
@@ -48,6 +50,8 @@ const InstanceDetails: React.FC = () => {
     );
   }
 
+  const asset = MOCK_ASSETS.find(a => a.id === instance.data.assetId);
+  const location = MOCK_LOCATIONS.find(l => l.id === asset?.locationId);
   const currentState = workflow.states.find(s => s.id === instance.currentStateId);
   const availableTransitions = workflow.transitions.filter(t => t.fromStateId === instance.currentStateId);
 
@@ -97,6 +101,14 @@ const InstanceDetails: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {asset && (
+             <Link 
+              to={`/assets?assetId=${asset.id}`}
+              className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-600 hover:shadow-lg transition-all"
+             >
+               <History size={16} /> Asset History
+             </Link>
+          )}
           <button className="p-2 text-slate-300 hover:text-slate-600 hover:bg-white rounded-2xl border border-transparent hover:border-slate-100 transition-all">
             <MoreVertical size={20} />
           </button>
@@ -151,16 +163,41 @@ const InstanceDetails: React.FC = () => {
           {/* Instance Data & Materials */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
              <section className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="p-8 border-b border-slate-50 bg-slate-50/50">
+                <div className="p-8 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Operational Context</h3>
+                  {asset && (
+                    <Link to={`/assets?assetId=${asset.id}`} className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1 hover:underline">
+                      Inspect Asset <ExternalLink size={12} />
+                    </Link>
+                  )}
                 </div>
-                <div className="p-8 space-y-6">
-                  {Object.entries(instance.data).map(([key, value]) => (
-                    <div key={key}>
-                      <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{key.replace(/([A-Z])/g, ' $1')}</label>
-                      <p className="text-slate-800 font-black text-sm">{value}</p>
+                <div className="p-8 space-y-8">
+                  {asset && (
+                    <div className="flex items-center gap-4 pb-6 border-b border-slate-50">
+                       <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Cpu size={24} /></div>
+                       <div>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Target Equipment</p>
+                          <p className="text-sm font-black text-slate-900 uppercase">{asset.name}</p>
+                       </div>
                     </div>
-                  ))}
+                  )}
+                  {location && (
+                    <div className="flex items-center gap-4 pb-6 border-b border-slate-50">
+                       <div className="p-3 bg-slate-50 text-slate-600 rounded-xl"><MapPin size={24} /></div>
+                       <div>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Physical Zone</p>
+                          <p className="text-sm font-black text-slate-900 uppercase">{location.name}</p>
+                       </div>
+                    </div>
+                  )}
+                  <div className="space-y-4 pt-2">
+                    {Object.entries(instance.data).filter(([k]) => k !== 'assetId').map(([key, value]) => (
+                      <div key={key}>
+                        <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{key.replace(/([A-Z])/g, ' $1')}</label>
+                        <p className="text-slate-800 font-black text-sm">{value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
              </section>
 
@@ -231,7 +268,6 @@ const InstanceDetails: React.FC = () => {
           {/* Current Actions */}
           <section className="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl shadow-blue-100 text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
-               {/* Added Workflow icon usage with proper import */}
                <Workflow size={120} className="rotate-12" />
             </div>
             <div className="relative z-10">
@@ -283,17 +319,6 @@ const InstanceDetails: React.FC = () => {
               </div>
             </div>
           </section>
-
-          {/* Communication */}
-          <div className="flex gap-4">
-            <button className="flex-1 flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-900 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
-              <MessageSquare size={18} />
-              Comms
-            </button>
-            <button className="w-16 flex items-center justify-center bg-white border border-slate-200 rounded-[1.5rem] text-slate-400 hover:text-blue-600 transition-all shadow-sm">
-              <Paperclip size={20} />
-            </button>
-          </div>
         </div>
       </div>
 

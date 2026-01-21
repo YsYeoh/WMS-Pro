@@ -1,15 +1,13 @@
 
 import React, { useState } from 'react';
-// Added MOCK_TEAM_MEMBERS to the imports from constants
 import { MOCK_VENDORS, MOCK_SERVICES, MOCK_TEAM_MEMBERS } from '../constants';
-import { Vendor, ScheduleOfRate, Service, SubService } from '../types';
+import { Vendor, SORSet, ScheduleOfRate, Service, SubService } from '../types';
 import { 
   Star, 
   Mail, 
   User, 
   Phone, 
   Calculator, 
-  DollarSign, 
   Plus, 
   Users, 
   Building2, 
@@ -21,25 +19,82 @@ import {
   Target,
   ShieldCheck,
   Calendar,
-  // Added ChevronRight to the imports from lucide-react
-  ChevronRight
+  ChevronRight,
+  X,
+  CheckCircle2,
+  Globe,
+  Award,
+  Trash2,
+  ChevronDown
 } from 'lucide-react';
 
 const VendorModule: React.FC = () => {
+  const [vendors, setVendors] = useState<Vendor[]>(MOCK_VENDORS);
   const [activeTab, setActiveTab] = useState<'vendors' | 'team'>('vendors');
   const [vendorDetailTab, setVendorDetailTab] = useState<'info' | 'sor'>('info');
-  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(MOCK_VENDORS[0]);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(vendors[0] || null);
+
+  // New Vendor Modal State
+  const [isNewVendorModalOpen, setIsNewVendorModalOpen] = useState(false);
+  const [newVendorForm, setNewVendorForm] = useState({
+    name: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    website: ''
+  });
+
+  // SOR Set Management State
+  const [selectedSorSetId, setSelectedSorSetId] = useState<string | null>(null);
+  const [isNewSorSetModalOpen, setIsNewSorSetModalOpen] = useState(false);
+  const [newSorSetForm, setNewSorSetForm] = useState({ name: '', effectiveDate: new Date().toISOString().split('T')[0] });
 
   // SOR Calculation State
   const [calcServiceId, setCalcServiceId] = useState<string>('');
   const [calcSubServiceId, setCalcSubServiceId] = useState<string>('');
   const [calcUnits, setCalcUnits] = useState<number>(0);
 
+  const activeSorSet = selectedVendor?.sorSets.find(s => s.id === (selectedSorSetId || selectedVendor.sorSets[0]?.id));
   const availableSubServices = MOCK_SERVICES.find(s => s.id === calcServiceId)?.subServices || [];
-  const selectedSorItem = selectedVendor?.scheduleOfRates.find(sor => sor.subServiceId === calcSubServiceId);
+  const selectedSorItem = activeSorSet?.rates.find(sor => sor.subServiceId === calcSubServiceId);
+
+  const handleCreateVendor = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newVendor: Vendor = {
+      id: `v-${Date.now()}`,
+      name: newVendorForm.name,
+      contactName: newVendorForm.contactName,
+      email: newVendorForm.email,
+      rating: 0,
+      sorSets: []
+    };
+
+    const updatedVendors = [newVendor, ...vendors];
+    setVendors(updatedVendors);
+    setSelectedVendor(newVendor);
+    setIsNewVendorModalOpen(false);
+    setNewVendorForm({ name: '', contactName: '', email: '', phone: '', website: '' });
+  };
+
+  const handleCreateSorSet = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedVendor) return;
+    const newSet: SORSet = {
+      id: `set-${Date.now()}`,
+      name: newSorSetForm.name,
+      effectiveDate: newSorSetForm.effectiveDate,
+      rates: []
+    };
+    const updatedVendor = { ...selectedVendor, sorSets: [...selectedVendor.sorSets, newSet] };
+    setVendors(vendors.map(v => v.id === selectedVendor.id ? updatedVendor : v));
+    setSelectedVendor(updatedVendor);
+    setSelectedSorSetId(newSet.id);
+    setIsNewSorSetModalOpen(false);
+    setNewSorSetForm({ name: '', effectiveDate: new Date().toISOString().split('T')[0] });
+  };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Operational Resources</h2>
@@ -67,40 +122,50 @@ const VendorModule: React.FC = () => {
       {activeTab === 'vendors' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Vendor List */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="relative mb-6">
-              <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input className="w-full bg-white border border-slate-200 rounded-2xl p-4 pl-12 text-sm font-bold shadow-sm focus:ring-4 focus:ring-blue-100 transition-all outline-none" placeholder="Search partners..." />
-            </div>
-            {MOCK_VENDORS.map(vendor => (
-              <div 
-                key={vendor.id} 
-                className={`bg-white border-2 rounded-[2rem] p-6 transition-all cursor-pointer group shadow-sm ${
-                  selectedVendor?.id === vendor.id ? 'border-blue-600 ring-8 ring-blue-50/50 shadow-blue-100' : 'border-slate-100 hover:border-slate-200'
-                }`}
-                onClick={() => setSelectedVendor(vendor)}
-              >
-                <div className="flex items-center gap-5">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${
-                    selectedVendor?.id === vendor.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'
-                  }`}>
-                    {vendor.name[0]}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-black text-slate-900 tracking-tight">{vendor.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center gap-1 text-amber-500">
-                        <Star size={12} fill="currentColor" />
-                        <span className="text-[10px] font-black">{vendor.rating}</span>
-                      </div>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{vendor.scheduleOfRates.length} Rates Defined</span>
-                    </div>
-                  </div>
-                  <ChevronRight size={18} className={`transition-transform ${selectedVendor?.id === vendor.id ? 'text-blue-600 translate-x-1' : 'text-slate-300'}`} />
-                </div>
+          <div className="lg:col-span-1 space-y-6">
+            <button 
+              onClick={() => setIsNewVendorModalOpen(true)}
+              className="w-full bg-slate-900 text-white p-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-95 group"
+            >
+              <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+              Register New Partner
+            </button>
+
+            <div className="space-y-4">
+              <div className="relative mb-6">
+                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input className="w-full bg-white border border-slate-200 rounded-2xl p-4 pl-12 text-sm font-bold shadow-sm focus:ring-4 focus:ring-blue-100 transition-all outline-none" placeholder="Search partners..." />
               </div>
-            ))}
+              {vendors.map(vendor => (
+                <div 
+                  key={vendor.id} 
+                  className={`bg-white border-2 rounded-[2rem] p-6 transition-all cursor-pointer group shadow-sm ${
+                    selectedVendor?.id === vendor.id ? 'border-blue-600 ring-8 ring-blue-50/50 shadow-blue-100' : 'border-slate-100 hover:border-slate-200'
+                  }`}
+                  onClick={() => { setSelectedVendor(vendor); setSelectedSorSetId(null); }}
+                >
+                  <div className="flex items-center gap-5">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${
+                      selectedVendor?.id === vendor.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'
+                    }`}>
+                      {vendor.name[0]}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <h3 className="font-black text-slate-900 tracking-tight truncate">{vendor.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 text-amber-500">
+                          <Star size={12} fill="currentColor" />
+                          <span className="text-[10px] font-black">{vendor.rating || 'New'}</span>
+                        </div>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{vendor.sorSets.length} Rate Sets</span>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className={`transition-transform ${selectedVendor?.id === vendor.id ? 'text-blue-600 translate-x-1' : 'text-slate-300'}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Details & SOR Management */}
@@ -116,7 +181,7 @@ const VendorModule: React.FC = () => {
                        <div>
                          <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{selectedVendor.name}</h3>
                          <p className="text-slate-500 font-bold flex items-center gap-2">
-                           <Calendar size={14} /> Partner since Oct 2023
+                           <Calendar size={14} /> Partner Record Active
                          </p>
                        </div>
                     </div>
@@ -137,7 +202,7 @@ const VendorModule: React.FC = () => {
                       onClick={() => setVendorDetailTab('sor')}
                       className={`pb-4 text-xs font-black uppercase tracking-[0.2em] transition-all border-b-4 ${vendorDetailTab === 'sor' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}
                     >
-                      Schedule of Rates (SOR)
+                      Commercial SOR Sets
                     </button>
                   </div>
                 </div>
@@ -153,11 +218,11 @@ const VendorModule: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4">
                                <div>
                                  <p className="text-xs font-bold text-slate-500">Total Awarded</p>
-                                 <p className="text-2xl font-black text-slate-900">$245.8k</p>
+                                 <p className="text-2xl font-black text-slate-900">$0.0k</p>
                                </div>
                                <div>
                                  <p className="text-xs font-bold text-slate-500">Avg Compliance</p>
-                                 <p className="text-2xl font-black text-emerald-600">98%</p>
+                                 <p className="text-2xl font-black text-slate-400">-%</p>
                                </div>
                             </div>
                          </div>
@@ -181,6 +246,12 @@ const VendorModule: React.FC = () => {
                             <Calculator size={16} className="text-blue-600" /> Instant Quote Tool
                           </h4>
                           <div className="space-y-6">
+                            <div className="space-y-2">
+                               <label className="text-[8px] font-black text-slate-400 uppercase">Select Rate Set</label>
+                               <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all" value={selectedSorSetId || ''} onChange={e => setSelectedSorSetId(e.target.value)}>
+                                  {selectedVendor.sorSets.map(set => <option key={set.id} value={set.id}>{set.name}</option>)}
+                               </select>
+                            </div>
                             <div className="space-y-2">
                                <label className="text-[8px] font-black text-slate-400 uppercase">Nature of Work</label>
                                <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all" value={calcServiceId} onChange={e => setCalcServiceId(e.target.value)}>
@@ -217,55 +288,86 @@ const VendorModule: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-8 animate-in fade-in duration-500">
-                      <div className="flex justify-between items-center">
-                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Governing Financial Rates</h4>
-                         <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
-                            <Plus size={14} /> Add Line Item
-                         </button>
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-6">
+                         <div>
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active SOR Set</h4>
+                            <div className="flex items-center gap-4">
+                               <select 
+                                 className="bg-white border border-slate-200 rounded-xl p-3 text-sm font-black text-blue-600 outline-none focus:ring-4 focus:ring-blue-50 transition-all shadow-sm"
+                                 value={selectedSorSetId || selectedVendor.sorSets[0]?.id || ''}
+                                 onChange={e => setSelectedSorSetId(e.target.value)}
+                               >
+                                  {selectedVendor.sorSets.map(set => (
+                                    <option key={set.id} value={set.id}>{set.name}</option>
+                                  ))}
+                                  {selectedVendor.sorSets.length === 0 && <option value="">No Sets Found</option>}
+                               </select>
+                               <button 
+                                 onClick={() => setIsNewSorSetModalOpen(true)}
+                                 className="flex items-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                               >
+                                  <Plus size={14} /> New Set
+                               </button>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Effective Horizon</p>
+                            <p className="text-sm font-bold text-slate-700">{activeSorSet?.effectiveDate || 'N/A'}</p>
+                         </div>
                       </div>
                       
-                      <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden">
-                        <table className="w-full border-collapse">
-                           <thead>
-                              <tr className="bg-slate-50/50 border-b border-slate-100">
-                                 <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Item</th>
-                                 <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Structure</th>
-                                 <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Effective Date</th>
-                                 <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Rate</th>
-                              </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-100">
-                              {selectedVendor.scheduleOfRates.map(sor => {
-                                 const masterService = MOCK_SERVICES.find(s => s.id === sor.serviceId);
-                                 const subService = masterService?.subServices.find(sub => sub.id === sor.subServiceId);
-                                 return (
-                                    <tr key={sor.id} className="hover:bg-slate-50 transition-colors">
-                                       <td className="px-8 py-6">
-                                          <p className="text-sm font-black text-slate-900">{subService?.name || 'Unknown Item'}</p>
-                                          <p className="text-[10px] font-bold text-slate-400 uppercase">{masterService?.name}</p>
-                                       </td>
-                                       <td className="px-8 py-6">
-                                          <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-slate-200">
-                                             {sor.unit}
-                                          </span>
-                                       </td>
-                                       <td className="px-8 py-6">
-                                          <p className="text-xs font-bold text-slate-500">{sor.effectiveDate}</p>
-                                       </td>
-                                       <td className="px-8 py-6 text-right">
-                                          <p className="text-lg font-black text-slate-900">${sor.rate.toLocaleString()}</p>
-                                       </td>
-                                    </tr>
-                                 );
-                              })}
-                           </tbody>
-                        </table>
-                      </div>
+                      {activeSorSet ? (
+                        <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden">
+                          <table className="w-full border-collapse">
+                             <thead>
+                                <tr className="bg-slate-50/50 border-b border-slate-100">
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Item</th>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Structure</th>
+                                   <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Rate</th>
+                                </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-100">
+                                {activeSorSet.rates.length > 0 ? activeSorSet.rates.map(sor => {
+                                   const masterService = MOCK_SERVICES.find(s => s.id === sor.serviceId);
+                                   const subService = masterService?.subServices.find(sub => sub.id === sor.subServiceId);
+                                   return (
+                                      <tr key={sor.id} className="hover:bg-slate-50 transition-colors">
+                                         <td className="px-8 py-6">
+                                            <p className="text-sm font-black text-slate-900">{subService?.name || 'Unknown Item'}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">{masterService?.name}</p>
+                                         </td>
+                                         <td className="px-8 py-6">
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-slate-200">
+                                               {sor.unit}
+                                            </span>
+                                         </td>
+                                         <td className="px-8 py-6 text-right">
+                                            <p className="text-lg font-black text-slate-900">${sor.rate.toLocaleString()}</p>
+                                         </td>
+                                      </tr>
+                                   );
+                                }) : (
+                                  <tr>
+                                    <td colSpan={3} className="px-8 py-20 text-center">
+                                      <FileSpreadsheet size={48} className="mx-auto text-slate-100 mb-4" />
+                                      <p className="text-sm font-black text-slate-300 uppercase tracking-widest">No Rates Defined for this Set</p>
+                                    </td>
+                                  </tr>
+                                )}
+                             </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2rem]">
+                           <Plus size={48} className="mx-auto text-slate-100 mb-4" />
+                           <p className="text-sm font-black text-slate-300 uppercase tracking-widest">Initialize a Commercial SOR Set to Manage Rates</p>
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-4 p-8 bg-slate-50 border border-slate-100 rounded-[2rem]">
                          <FileSpreadsheet className="text-blue-600" size={32} />
                          <div>
-                            <p className="text-sm font-black text-slate-900 tracking-tight">Bulk Import / Export Schedule</p>
+                            <p className="text-sm font-black text-slate-900 tracking-tight">Bulk Import / Export Set</p>
                             <p className="text-xs text-slate-500 font-medium">Download or upload SOR data via CSV/Excel for large pricing revisions.</p>
                          </div>
                          <button className="ml-auto px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm">Execute Sync</button>
@@ -328,6 +430,109 @@ const VendorModule: React.FC = () => {
           <button className="w-full p-8 text-center text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 bg-slate-50 hover:bg-blue-50 transition-all border-t border-slate-100">
             + Provision New Internal Resource
           </button>
+        </div>
+      )}
+
+      {/* NEW VENDOR MODAL */}
+      {isNewVendorModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col max-h-[90vh]">
+            <div className="p-12 border-b border-slate-50 flex justify-between items-center bg-slate-900 text-white">
+              <div className="space-y-3">
+                <div className="flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.4em] text-blue-400">
+                   <Award size={20} /> Commercial Onboarding
+                </div>
+                <h3 className="text-4xl font-black uppercase tracking-tighter leading-none text-white">Register Partner</h3>
+                <p className="text-xs font-bold opacity-60 uppercase tracking-widest mt-2">Provisioning external commercial resource</p>
+              </div>
+              <button onClick={() => setIsNewVendorModalOpen(false)} className="p-5 hover:bg-white/10 rounded-[2rem] transition-all text-white"><X size={36} /></button>
+            </div>
+
+            <form onSubmit={handleCreateVendor} className="p-16 overflow-y-auto space-y-16 custom-scrollbar bg-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                <div className="space-y-10">
+                   <h4 className="text-[12px] font-black text-blue-600 uppercase tracking-[0.4em] border-b-2 border-blue-50 pb-4 flex items-center gap-3">
+                      <Building2 size={20} /> Entity Identity
+                   </h4>
+                   <div className="space-y-6">
+                      <div className="space-y-3">
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Business Name</label>
+                         <input required className="w-full bg-slate-50 border border-slate-100 p-6 rounded-3xl font-black text-base uppercase outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="e.g. Apex Industrial Solutions" value={newVendorForm.name} onChange={e => setNewVendorForm({...newVendorForm, name: e.target.value})} />
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Corporate Website</label>
+                         <div className="relative">
+                            <input className="w-full bg-slate-50 border border-slate-100 p-6 rounded-3xl font-bold text-sm pl-16 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="www.apex-solutions.com" value={newVendorForm.website} onChange={e => setNewVendorForm({...newVendorForm, website: e.target.value})} />
+                            <Globe className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-10">
+                   <h4 className="text-[12px] font-black text-blue-600 uppercase tracking-[0.4em] border-b-2 border-blue-50 pb-4 flex items-center gap-3">
+                      <User size={20} /> Primary Contact
+                   </h4>
+                   <div className="space-y-6">
+                      <div className="space-y-3">
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Accountable Officer</label>
+                         <input required className="w-full bg-slate-50 border border-slate-100 p-6 rounded-3xl font-black text-base uppercase outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="e.g. Jane Sterling" value={newVendorForm.contactName} onChange={e => setNewVendorForm({...newVendorForm, contactName: e.target.value})} />
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Communication Endpoint (Email)</label>
+                         <div className="relative">
+                            <input required type="email" className="w-full bg-slate-50 border border-slate-100 p-6 rounded-3xl font-bold text-sm pl-16 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="jane@apex-solutions.com" value={newVendorForm.email} onChange={e => setNewVendorForm({...newVendorForm, email: e.target.value})} />
+                            <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
+                         </div>
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Direct Phone</label>
+                         <div className="relative">
+                            <input className="w-full bg-slate-50 border border-slate-100 p-6 rounded-3xl font-bold text-sm pl-16 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="+1 (555) 000-0000" value={newVendorForm.phone} onChange={e => setNewVendorForm({...newVendorForm, phone: e.target.value})} />
+                            <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+              <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100 flex items-start gap-6">
+                 <div className="p-4 bg-white rounded-2xl shadow-sm text-blue-600"><ShieldCheck size={32} /></div>
+                 <div>
+                    <h5 className="font-black text-slate-900 uppercase tracking-tight text-sm">Automated Governance Entry</h5>
+                    <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-2xl mt-1 uppercase">Upon registration, this entity will be assigned a temporary "NEGOTIATING" status. You must define a Schedule of Rates (SOR) before assigning work orders to this partner.</p>
+                 </div>
+              </div>
+
+              <button type="submit" className="w-full bg-blue-600 text-white py-12 rounded-[3rem] font-black uppercase tracking-[0.5em] text-xl shadow-2xl shadow-blue-100 hover:bg-blue-700 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-8 group">
+                <CheckCircle2 className="group-hover:rotate-12 transition-transform" size={40} />
+                Authorize Partner Entry
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SOR SET MODAL */}
+      {isNewSorSetModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+           <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-300">
+             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-blue-600 text-white rounded-t-[2.5rem]">
+               <h3 className="text-xl font-black uppercase tracking-tight">Initialize Rate Set</h3>
+               <button onClick={() => setIsNewSorSetModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X /></button>
+             </div>
+             <form onSubmit={handleCreateSorSet} className="p-8 space-y-6">
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rate Set Identifier</label>
+                   <input required className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold" placeholder="e.g. FY2025 Standard" value={newSorSetForm.name} onChange={e => setNewSorSetForm({...newSorSetForm, name: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Effective Date</label>
+                   <input type="date" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold" value={newSorSetForm.effectiveDate} onChange={e => setNewSorSetForm({...newSorSetForm, effectiveDate: e.target.value})} />
+                </div>
+                <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs">Provision Rate Set</button>
+             </form>
+           </div>
         </div>
       )}
     </div>

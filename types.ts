@@ -12,6 +12,8 @@ export enum InstanceStatus {
   CANCELLED = 'CANCELLED'
 }
 
+export type FrequencyType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'ANNUALLY' | 'ADHOC';
+
 export interface Tenant {
   id: string;
   name: string;
@@ -70,6 +72,38 @@ export interface MaintenanceRequest {
   assignedTo?: string; // User or Group ID
   workflowInstanceId?: string; // Linked engine instance
   createdAt: string;
+}
+
+// --- Brick Schema & Operations ---
+
+export type BrickLocationClass = 'Building' | 'Floor' | 'Room' | 'Zone' | 'HVAC_Zone' | 'Outdoor_Area';
+export type BrickEquipmentClass = 'AHU' | 'VAV' | 'Boiler' | 'Chiller' | 'Lighting_System' | 'Pump' | 'Fan' | 'Elevator' | 'Security_System';
+
+export interface BrickRelationship {
+  type: 'isPartOf' | 'feeds' | 'isLocationOf' | 'hasPoint';
+  targetId: string;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  brickClass: BrickLocationClass;
+  parentId?: string;
+  address?: string;
+  tags?: string[];
+}
+
+export interface Asset {
+  id: string;
+  locationId: string; // The primary spatial location
+  name: string;
+  brickClass: BrickEquipmentClass;
+  status: 'OPERATIONAL' | 'DEGRADED' | 'DOWN';
+  installationDate: string;
+  expectedLifespanYears: number;
+  lastMaintenanceDate?: string;
+  relationships: BrickRelationship[]; // Brick graph edges
+  category: string; // Keep for legacy UI grouping
 }
 
 // --- Workflow & Operations ---
@@ -175,60 +209,32 @@ export interface Service {
   subServices: SubService[];
 }
 
-export interface ScheduleOfRate {
-  id: string;
-  vendorId: string;
-  subServiceId: string;
-  serviceId: string;
-  rate: number;
-  unit: string;
-  effectiveDate: string;
-}
-
-export interface Vendor {
-  id: string;
-  name: string;
-  contactName: string;
-  email: string;
-  rating: number;
-  scheduleOfRates: ScheduleOfRate[];
-}
-
 export interface Project {
   id: string;
   name: string;
   status: 'ACTIVE' | 'ON_HOLD' | 'COMPLETED';
   startDate: string;
+  endDate?: string;
   budget: number;
   description: string;
+  serviceIds: string[];
+  locationIds: string[]; // Site selection
 }
 
 export interface Contract {
   id: string;
   projectId: string;
-  vendorId: string;
+  vendorId?: string; // Null if In-house
+  sorSetId?: string; // Reference to one active SOR set from the vendor
   title: string;
+  description: string;
   value: number;
   status: 'SIGNED' | 'NEGOTIATING' | 'TERMINATED';
-}
-
-export interface Location {
-  id: string;
-  name: string;
-  type: 'BUILDING' | 'FLOOR' | 'ROOM';
-  parentId?: string;
-  address?: string;
-}
-
-export interface Asset {
-  id: string;
-  locationId: string;
-  name: string;
-  category: string;
-  status: 'OPERATIONAL' | 'DEGRADED' | 'DOWN';
-  installationDate: string;
-  expectedLifespanYears: number;
-  lastMaintenanceDate?: string;
+  startDate: string;
+  endDate: string;
+  serviceIds: string[]; // Subset of project services
+  vendorMode: 'IN_HOUSE' | 'OUTSOURCE';
+  eligibleVendorIds: string[];
 }
 
 export interface SOW {
@@ -237,14 +243,15 @@ export interface SOW {
   title: string;
   description: string;
   workflowDefinitionId: string; 
-  workflowInstanceId?: string; 
   estimatedHours: number;
   startDate: string;
   endDate: string;
-  locationId: string;
-  assetId?: string;
-  subServiceId: string;
+  locationIds: string[];
+  assetIds: string[];
+  serviceId: string; // One service from parent contract list
   vendorId: string;
+  allowedFrequencies: FrequencyType[];
+  defaultFrequency: FrequencyType;
   actualCost?: number;
 }
 
@@ -252,9 +259,45 @@ export interface ScheduledTask {
   id: string;
   sowId: string;
   title: string;
-  scheduledAt: string;
-  assignedTo: string;
+  description?: string;
+  checklistId?: string;
+  priority?: RequestPriority;
+  startTime?: string;
+  endTime?: string;
+  scheduledAt?: string;
+  assignedToIds?: string[]; // User or Group IDs
+  assignedTo?: string;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE';
-  recurrence?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY' | 'ADHOC';
+  locationId: string;
+  assetId?: string;
+  frequency?: FrequencyType;
+  recurrence?: FrequencyType | string;
+  frequencyConfig?: Record<string, any>;
   workflowInstanceId?: string;
+}
+
+export interface ScheduleOfRate {
+  id: string;
+  serviceId: string;
+  subServiceId: string;
+  rate: number;
+  unit: string;
+}
+
+export interface SORSet {
+  id: string;
+  name: string;
+  description?: string;
+  effectiveDate: string;
+  expiryDate?: string;
+  rates: ScheduleOfRate[];
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  contactName: string;
+  email: string;
+  rating: number;
+  sorSets: SORSet[];
 }

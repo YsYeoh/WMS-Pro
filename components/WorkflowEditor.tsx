@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactFlow, { 
@@ -68,12 +67,13 @@ const StateNode = ({ data, selected }: { data: any, selected: boolean }) => {
         </p>
         
         {/* Indicators for configured features */}
+        {/* Fix: Wrapped Lucide icons in spans with title prop as icons themselves do not accept title in their React props */}
         <div className="flex flex-wrap gap-1.5 mt-2">
-          {data.slaHours > 0 && <Clock size={12} className="text-amber-500" title={`SLA: ${data.slaHours}h`} />}
-          {data.allowedRoles?.length > 0 && <Users size={12} className="text-indigo-500" title="Roles assigned" />}
-          {data.checklistTemplateId && <ClipboardCheck size={12} className="text-emerald-500" title="Checklist SOP attached" />}
-          {data.attachmentRequired && <Paperclip size={12} className="text-blue-500" title="Attachment required" />}
-          {data.remarkRequired && <MessageSquareText size={12} className="text-slate-400" title="Remark required" />}
+          {data.slaHours > 0 && <span title={`SLA: ${data.slaHours}h`}><Clock size={12} className="text-amber-500" /></span>}
+          {data.allowedRoles?.length > 0 && <span title="Roles assigned"><Users size={12} className="text-indigo-500" /></span>}
+          {data.checklistTemplateId && <span title="Checklist SOP attached"><ClipboardCheck size={12} className="text-emerald-500" /></span>}
+          {data.attachmentRequired && <span title="Attachment required"><Paperclip size={12} className="text-blue-500" /></span>}
+          {data.remarkRequired && <span title="Remark required"><MessageSquareText size={12} className="text-slate-400" /></span>}
         </div>
       </div>
       <Handle type="source" position={Position.Bottom} className="!bg-blue-400" />
@@ -572,7 +572,7 @@ const WorkflowEditor: React.FC = () => {
                     </label>
                     <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
                       <p className="text-[10px] text-amber-700 leading-relaxed font-medium">
-                        Useful for "Reject" paths to ensure vendors or users provide a reason for the negative transition.
+                        Useful for "Reject" primitives to ensure vendors or users provide a reason for the negative transition.
                       </p>
                     </div>
                   </div>

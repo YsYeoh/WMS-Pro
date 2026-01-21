@@ -26,7 +26,8 @@ import {
   CalendarCheck,
   ShieldCheck,
   Fingerprint,
-  MessageSquare
+  MessageSquare,
+  Handshake
 } from 'lucide-react';
 import { Tenant, WorkflowDefinition, WorkflowInstance } from './types';
 import { MOCK_TENANTS, MOCK_WORKFLOWS, MOCK_INSTANCES } from './constants';
@@ -35,8 +36,7 @@ import WorkflowList from './components/WorkflowList';
 import WorkflowEditor from './components/WorkflowEditor';
 import InstanceDetails from './components/InstanceDetails';
 import VendorModule from './components/VendorModule';
-import ProjectModule from './components/ProjectModule';
-import ProjectDetails from './components/ProjectDetails';
+import ContractModule from './components/ContractModule';
 import ServicesModule from './components/ServicesModule';
 import AssetModule from './components/AssetModule';
 import ChecklistModule from './components/ChecklistModule';
@@ -44,6 +44,7 @@ import InventoryModule from './components/InventoryModule';
 import TaskModule from './components/TaskModule';
 import RBACModule from './components/RBACModule';
 import RequestModule from './components/RequestModule';
+import SettingsModule from './components/SettingsModule';
 
 // Context for Tenant Isolation
 interface TenantContextType {
@@ -83,7 +84,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform lg:translate-x-0 lg:static ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6">
+        <div className="p-6 h-full flex flex-col">
           <div className="flex items-center gap-3 mb-8">
             <div className="bg-blue-600 p-2 rounded-lg text-white">
               <Layers size={24} />
@@ -91,22 +92,22 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <h1 className="text-xl font-bold tracking-tight">WMS Pro</h1>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-1 flex-1 overflow-y-auto custom-scrollbar pr-2">
             <SidebarItem icon={LayoutDashboard} label="Dashboard" path="/" active={location.pathname === '/'} />
             <SidebarItem icon={MessageSquare} label="Help Desk" path="/requests" active={location.pathname === '/requests'} />
+            <SidebarItem icon={Briefcase} label="Portfolio Hub" path="/portfolio" active={location.pathname === '/portfolio'} />
             <SidebarItem icon={CalendarCheck} label="Task Execution" path="/tasks" active={location.pathname === '/tasks'} />
-            <SidebarItem icon={Briefcase} label="Projects" path="/projects" active={location.pathname.startsWith('/projects')} />
-            <SidebarItem icon={Building} label="Assets & Locations" path="/assets" active={location.pathname === '/assets'} />
-            <SidebarItem icon={Package} label="Inventory Stock" path="/inventory" active={location.pathname === '/inventory'} />
-            <SidebarItem icon={ClipboardList} label="Checklist SOPs" path="/checklists" active={location.pathname === '/checklists'} />
+            <SidebarItem icon={Building} label="Assets & Twin" path="/assets" active={location.pathname === '/assets'} />
+            <SidebarItem icon={Package} label="Inventory" path="/inventory" active={location.pathname === '/inventory'} />
+            <SidebarItem icon={ClipboardList} label="Checklists" path="/checklists" active={location.pathname === '/checklists'} />
             <SidebarItem icon={Wrench} label="Services" path="/services" active={location.pathname === '/services'} />
             <SidebarItem icon={GitBranch} label="Workflows" path="/workflows" active={location.pathname.startsWith('/workflows')} />
             <SidebarItem icon={Fingerprint} label="Access Control" path="/rbac" active={location.pathname === '/rbac'} />
-            <SidebarItem icon={Users} label="Team & Vendors" path="/team" active={location.pathname === '/team'} />
+            <SidebarItem icon={Users} label="Vendors" path="/team" active={location.pathname === '/team'} />
             <SidebarItem icon={Settings} label="Settings" path="/settings" active={location.pathname === '/settings'} />
           </nav>
 
-          <div className="mt-10 pt-10 border-t border-slate-100">
+          <div className="mt-6 pt-6 border-t border-slate-100">
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Organization
             </label>
@@ -184,8 +185,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/requests" element={<RequestModule />} />
             <Route path="/tasks" element={<TaskModule />} />
-            <Route path="/projects" element={<ProjectModule />} />
-            <Route path="/projects/:id" element={<ProjectDetails />} />
+            <Route path="/portfolio" element={<ContractModule />} />
             <Route path="/assets" element={<AssetModule />} />
             <Route path="/inventory" element={<InventoryModule />} />
             <Route path="/checklists" element={<ChecklistModule />} />
@@ -196,6 +196,7 @@ const App: React.FC = () => {
             <Route path="/instance/:id" element={<InstanceDetails />} />
             <Route path="/team" element={<VendorModule />} />
             <Route path="/rbac" element={<RBACModule />} />
+            <Route path="/settings" element={<SettingsModule />} />
             <Route path="*" element={<div className="p-20 text-center text-slate-500">Feature Coming Soon</div>} />
           </Routes>
         </AppLayout>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   MOCK_REQUESTS, 
   MOCK_LOCATIONS, 
@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Workflow,
-  Zap
+  Zap,
+  History
 } from 'lucide-react';
 
 const RequestModule: React.FC = () => {
@@ -213,12 +214,13 @@ const RequestModule: React.FC = () => {
                         </div>
                      </div>
                      {asset && (
-                        <div className="flex items-center gap-3 border-l border-slate-100 pl-8">
-                           <div className="p-2 bg-slate-50 text-indigo-500 rounded-lg">
-                              <Cpu size={16} />
-                           </div>
+                        <div className="flex items-center gap-3 border-l border-slate-100 pl-8 group/asset">
+                           <div className="p-2 bg-slate-50 text-indigo-500 rounded-lg"><Cpu size={16} /></div>
                            <div>
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Asset ID</p>
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                Asset ID 
+                                <Link to={`/assets?assetId=${asset.id}`} className="text-blue-600 hover:underline"><History size={10} /></Link>
+                              </p>
                               <p className="text-xs font-black text-slate-700 uppercase tracking-tight">{asset.name}</p>
                            </div>
                         </div>
@@ -248,7 +250,6 @@ const RequestModule: React.FC = () => {
                    ) : (
                      <button 
                        onClick={() => {
-                          const instId = `inst-${Date.now()}`;
                           navigate(`/instance/inst1`); // Demo redirection
                        }}
                        className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all"
@@ -258,99 +259,20 @@ const RequestModule: React.FC = () => {
                        <ArrowRightCircle size={18} />
                      </button>
                    )}
-                   <button className="w-full py-4 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] border-2 border-slate-100 rounded-[1.5rem] hover:bg-slate-50 transition-all">
-                      Assign Partner
-                   </button>
+                   {asset && (
+                      <button 
+                        onClick={() => navigate(`/assets?assetId=${asset.id}`)}
+                        className="w-full py-4 text-blue-600 font-black text-[10px] uppercase tracking-[0.2em] border-2 border-blue-100 rounded-[1.5rem] hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                      >
+                         <History size={14} /> Full Lifecycle Audit
+                      </button>
+                   )}
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* New Request Modal */}
-      {isNewRequestModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="p-12 border-b border-slate-50 flex justify-between items-center">
-                 <div>
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Report Infrastructure Issue</h3>
-                    <p className="text-slate-500 font-medium">Capture high-fidelity details for technician resolution.</p>
-                 </div>
-                 <button onClick={() => setIsNewRequestModalOpen(false)} className="p-4 hover:bg-slate-100 rounded-3xl text-slate-400 transition-all"><X size={24} /></button>
-              </div>
-
-              <form onSubmit={handleCreateRequest} className="p-12 space-y-8 overflow-y-auto max-h-[70vh]">
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Failure Description</label>
-                    <input 
-                      required 
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-6 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all" 
-                      placeholder="e.g. Roof leak in Server Room A" 
-                      value={form.title}
-                      onChange={e => setForm({...form, title: e.target.value})}
-                    />
-                    <textarea 
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-6 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all min-h-[120px]" 
-                      placeholder="Provide specific context or error codes..." 
-                      value={form.description}
-                      onChange={e => setForm({...form, description: e.target.value})}
-                    />
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Physical Zone</label>
-                       <select 
-                         required 
-                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-6 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
-                         value={form.locationId}
-                         onChange={e => setForm({...form, locationId: e.target.value})}
-                       >
-                          <option value="">Select location...</option>
-                          {MOCK_LOCATIONS.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                       </select>
-                    </div>
-                    <div className="space-y-4">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specific Asset</label>
-                       <select 
-                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-6 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
-                         value={form.assetId}
-                         onChange={e => setForm({...form, assetId: e.target.value})}
-                       >
-                          <option value="">N/A (General Zone)</option>
-                          {MOCK_ASSETS.filter(a => !form.locationId || a.locationId === form.locationId).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                       </select>
-                    </div>
-                 </div>
-
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Criticality Level</label>
-                    <div className="grid grid-cols-4 gap-4">
-                       {(['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as RequestPriority[]).map(p => (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => setForm({...form, priority: p})}
-                            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
-                               form.priority === p 
-                               ? 'bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200 scale-105' 
-                               : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
-                            }`}
-                          >
-                             {p}
-                          </button>
-                       ))}
-                    </div>
-                 </div>
-
-                 <button type="submit" className="w-full bg-blue-600 text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all mt-6">
-                    Submit Triage Ticket
-                 </button>
-              </form>
-           </div>
-        </div>
-      )}
     </div>
   );
 };

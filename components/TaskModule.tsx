@@ -135,8 +135,10 @@ const TaskModule: React.FC = () => {
         {filteredTasks.length > 0 ? (
           filteredTasks.map(task => {
             const sow = MOCK_SOWS.find(s => s.id === task.sowId);
-            const location = MOCK_LOCATIONS.find(l => l.id === sow?.locationId);
-            const asset = MOCK_ASSETS.find(a => a.id === sow?.assetId);
+            // Fix: SOW locationIds/assetIds are now plural arrays. 
+            // We must use the task's specific locationId and assetId properties directly.
+            const location = MOCK_LOCATIONS.find(l => l.id === task.locationId);
+            const asset = MOCK_ASSETS.find(a => a.id === task.assetId);
             
             return (
               <div 
